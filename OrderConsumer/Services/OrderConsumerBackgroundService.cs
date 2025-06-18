@@ -50,15 +50,9 @@ protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         
         try
         {
-            // Burada sipariş işleme mantığınızı yazabilirsiniz
-            // Örneğin:
-            // - Email gönderme
-            // - SMS gönderme
-            // - Stok güncelleme
-            // - Fatura oluşturma
-            // - Kargo firmasına bildirim gönderme
-            
-            await Task.Delay(1000); // Simüle edilmiş işlem süresi
+            //Simulate order processing
+
+            await Task.Delay(1000); 
             
             _logger.LogInformation("=== ORDER PROCESSING COMPLETED ===");
             _logger.LogInformation("Successfully processed order created event for OrderId: {OrderId}", orderEvent.OrderId);

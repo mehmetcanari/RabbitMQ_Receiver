@@ -1,7 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using OrderConsumer.Models;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -38,20 +36,16 @@ public class RabbitMqConsumerService : IDisposable
             
             _logger.LogInformation("Successfully connected to RabbitMQ");
             
-            // Exchange'i tanımla
             _channel.ExchangeDeclare("order_exchange", ExchangeType.Direct, true, false, null);
             _logger.LogInformation("Exchange 'order_exchange' declared");
             
-            // Queue'yu tanımla
             var queueResult = _channel.QueueDeclare("order_created_queue", true, false, false, null);
             _logger.LogInformation("Queue 'order_created_queue' declared with {MessageCount} messages", 
                 queueResult.MessageCount);
             
-            // Queue'yu exchange'e bağla
             _channel.QueueBind("order_created_queue", "order_exchange", "order.created");
             _logger.LogInformation("Queue 'order_created_queue' bound to exchange 'order_exchange' with routing key 'order.created'");
             
-            // QoS ayarları
             _channel.BasicQos(0, 1, false);
             _logger.LogInformation("QoS settings applied");
         }
@@ -66,7 +60,6 @@ public class RabbitMqConsumerService : IDisposable
     {
         _logger.LogInformation("Setting up consumer for queue: order_created_queue");
         
-        // Connection ve channel durumunu kontrol et
         _logger.LogInformation("Connection is open: {IsOpen}", _connection.IsOpen);
         _logger.LogInformation("Channel is open: {IsOpen}", _channel.IsOpen);
         
@@ -95,7 +88,6 @@ public class RabbitMqConsumerService : IDisposable
                     _logger.LogInformation("Successfully deserialized message: OrderId={OrderId}, AccountId={AccountId}, TotalPrice={TotalPrice}", 
                         message.OrderId, message.AccountId, message.TotalPrice);
                     
-                    // Async handler'ı Task.Run ile çalıştır
                     Task.Run(async () =>
                     {
                         try
@@ -125,7 +117,7 @@ public class RabbitMqConsumerService : IDisposable
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing message from queue: {RawMessage}", messageJson);
-                _channel.BasicNack(ea.DeliveryTag, false, true); // Mesajı tekrar kuyruğa al
+                _channel.BasicNack(ea.DeliveryTag, false, true); 
             }
         };
 
