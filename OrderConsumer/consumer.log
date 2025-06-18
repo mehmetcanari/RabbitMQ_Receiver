@@ -1,0 +1,32 @@
+Using launch settings from /Users/mehmetcanari/Desktop/RabbitMQ_Consumer/OrderConsumer/Properties/launchSettings.json...
+Building...
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      Connecting to RabbitMQ at localhost:5672
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      Successfully connected to RabbitMQ
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      Exchange 'order_exchange' declared
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      Queue 'order_created_queue' declared with 8 messages
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      Queue 'order_created_queue' bound to exchange 'order_exchange' with routing key 'order.created'
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      QoS settings applied
+info: OrderConsumer.Services.OrderConsumerBackgroundService[0]
+      Starting Order Consumer Background Service
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      Setting up consumer for queue: order_created_queue
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      Started consuming messages from order_created_queue with consumer tag: amq.ctag-IXel8kjwEmASPcD3keDKzw
+info: OrderConsumer.Services.RabbitMqConsumerService[0]
+      Queue status - Messages: 7, Consumers: 1
+info: OrderConsumer.Services.OrderConsumerBackgroundService[0]
+      Successfully started consuming messages
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5276
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/mehmetcanari/Desktop/RabbitMQ_Consumer/OrderConsumer

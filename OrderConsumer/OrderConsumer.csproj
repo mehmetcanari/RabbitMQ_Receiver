@@ -4,7 +4,10 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <RootNamespace>MessageBrokerReceiver</RootNamespace>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
+    </ItemGroup>
 
 </Project>
