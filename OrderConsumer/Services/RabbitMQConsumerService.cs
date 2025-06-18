@@ -66,18 +66,25 @@ public class RabbitMqConsumerService : IDisposable
     {
         _logger.LogInformation("Setting up consumer for queue: order_created_queue");
         
-        var consumer = new AsyncEventingBasicConsumer(_channel);
+        // Connection ve channel durumunu kontrol et
+        _logger.LogInformation("Connection is open: {IsOpen}", _connection.IsOpen);
+        _logger.LogInformation("Channel is open: {IsOpen}", _channel.IsOpen);
         
-        consumer.Received += async (model, ea) =>
+        var consumer = new EventingBasicConsumer(_channel);
+        
+        consumer.Received += (model, ea) =>
         {
+            _logger.LogInformation("=== MESSAGE RECEIVED ===");
             _logger.LogInformation("Received message with delivery tag: {DeliveryTag}", ea.DeliveryTag);
             _logger.LogInformation("Message routing key: {RoutingKey}", ea.RoutingKey);
             _logger.LogInformation("Message exchange: {Exchange}", ea.Exchange);
             
+            string messageJson = string.Empty;
+            
             try
             {
                 var body = ea.Body.ToArray();
-                var messageJson = Encoding.UTF8.GetString(body);
+                messageJson = Encoding.UTF8.GetString(body);
                 
                 _logger.LogInformation("Raw message received: {Message}", messageJson);
                 
@@ -88,10 +95,21 @@ public class RabbitMqConsumerService : IDisposable
                     _logger.LogInformation("Successfully deserialized message: OrderId={OrderId}, AccountId={AccountId}, TotalPrice={TotalPrice}", 
                         message.OrderId, message.AccountId, message.TotalPrice);
                     
-                    await messageHandler(message);
-                    _channel.BasicAck(ea.DeliveryTag, false);
-                    
-                    _logger.LogInformation("Successfully processed and acknowledged message: OrderId={OrderId}", message.OrderId);
+                    // Async handler'ı Task.Run ile çalıştır
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await messageHandler(message);
+                            _channel.BasicAck(ea.DeliveryTag, false);
+                            _logger.LogInformation("Successfully processed and acknowledged message: OrderId={OrderId}", message.OrderId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error in message handler for OrderId: {OrderId}", message.OrderId);
+                            _channel.BasicNack(ea.DeliveryTag, false, true);
+                        }
+                    });
                 }
                 else
                 {
@@ -101,12 +119,12 @@ public class RabbitMqConsumerService : IDisposable
             }
             catch (JsonException jsonEx)
             {
-                _logger.LogError(jsonEx, "JSON deserialization error for message");
+                _logger.LogError(jsonEx, "JSON deserialization error for message: {RawMessage}", messageJson);
                 _channel.BasicNack(ea.DeliveryTag, false, true);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing message from queue");
+                _logger.LogError(ex, "Error processing message from queue: {RawMessage}", messageJson);
                 _channel.BasicNack(ea.DeliveryTag, false, true); // Mesajı tekrar kuyruğa al
             }
         };
@@ -114,13 +132,11 @@ public class RabbitMqConsumerService : IDisposable
         consumer.Shutdown += (model, ea) =>
         {
             _logger.LogWarning("Consumer shutdown: {Reason}", ea.Initiator);
-            return Task.CompletedTask;
         };
 
         consumer.ConsumerCancelled += (model, ea) =>
         {
             _logger.LogWarning("Consumer cancelled");
-            return Task.CompletedTask;
         };
 
         var consumerTag = _channel.BasicConsume("order_created_queue", false, consumer);

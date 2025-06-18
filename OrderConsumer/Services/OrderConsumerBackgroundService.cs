@@ -17,23 +17,26 @@ public class OrderConsumerBackgroundService : BackgroundService
         _logger = logger;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+{
+    _logger.LogInformation("Starting Order Consumer Background Service");
+    
+    try
     {
-        _logger.LogInformation("Starting Order Consumer Background Service");
+        _rabbitMQService.StartConsuming(HandleOrderCreatedEvent);
+        _logger.LogInformation("Successfully started consuming messages");
         
-        try
+        while (!stoppingToken.IsCancellationRequested)
         {
-            _rabbitMQService.StartConsuming(HandleOrderCreatedEvent);
-            _logger.LogInformation("Successfully started consuming messages");
+            await Task.Delay(1000, stoppingToken);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to start consuming messages");
-            throw;
-        }
-        
-        return Task.CompletedTask;
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Failed to start consuming messages");
+        throw;
+    }
+}
 
     private async Task HandleOrderCreatedEvent(OrderCreatedEvent orderEvent)
     {
